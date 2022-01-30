@@ -1,6 +1,6 @@
 # Spotipi
 ### Overview
-This project is to display information on 32x32 led matrix from the Spotify web api.
+This project is to display information on the 8x8 sense HAT led matrix from the Spotify web api.
 ### Getting Started
 * Create a new application within the [Spotify developer dashboard](https://developer.spotify.com/dashboard/applications) <br />
 * Edit the settings of the application within the dashboard.
@@ -8,7 +8,7 @@ This project is to display information on 32x32 led matrix from the Spotify web 
 * Before logging into the raspberry pi, you will need to generate an authentication token.
 * To do this, you are going to want to clone my spotipi repository on your main computer with access to a web browser.
 ```
-git clone  https://github.com/ryanwa18/spotipi.git
+git clone  https://github.com/PineappleSnackz/spotipi-sensehat.git
 ```
 * Next go ahead and change into the directory using 
 ```
@@ -25,7 +25,7 @@ scp .cache-<username> pi@spotipy.local:/home/pi
 ```
 * Clone the repository to your raspberrypi
 ```
-git clone https://github.com/ryanwa18/spotipi.git
+git clone  https://github.com/PineappleSnackz/spotipi-sensehat.git
 ```
 * Move the token file to the repository root
 ```
@@ -42,4 +42,4 @@ navigate to http://<raspberrypi_hostname or ip_address> within a web browser
 ```
 
 ### Final Product
-![](https://i.redd.it/8s1cxqo5jfk51.jpg)
+![](https://i.imgur.com/9qdbcO7.jpg)
