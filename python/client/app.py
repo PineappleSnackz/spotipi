@@ -5,6 +5,7 @@ from flask import Flask, render_template, request
 import sys,os
 import configparser
 import dbus
+from sense_hat import SenseHat
 
 app = Flask(__name__)
 app.config["CACHE_TYPE"] = "null"
@@ -19,53 +20,40 @@ config.read(filename)
 sysbus = dbus.SystemBus()
 systemd1 = sysbus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
 manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+sense = SenseHat()
 
 # home route
 @app.route("/")
 def saved_config():
-    # Brightness from config file
-    brightness = int(config['DEFAULT']['brightness'])
-    width = int(config['DEFAULT']['rows'])
-    height = int(config['DEFAULT']['columns'])
     power = config['DEFAULT']['power']
-    return render_template('index.html', brightness = brightness, width = width, height = height, power = power)
+    lowlight = config['DEFAULT']['lowlight']
+    return render_template('index.html', power = power, lowlight = lowlight)
 
 # handling power status
 @app.route("/power", methods=["GET", "POST"])
 def handle_power():
     power = request.form['power']
-    brightness = int(config['DEFAULT']['brightness'])
-    width = int(config['DEFAULT']['rows'])
-    height = int(config['DEFAULT']['columns'])
+    lowlight = config['DEFAULT']['lowlight']    
     config.set('DEFAULT', 'power', request.form['power'])
     if power == 'on':
       job = manager.StartUnit('spotipi.service', 'replace')
     else:
       job = manager.StopUnit('spotipi.service', 'replace')
-    return render_template('index.html', brightness = brightness, width = width, height = height, power = power)
+      sense.clear()
+    return render_template('index.html', power = power, lowlight = lowlight)
 
-# handling form data
-@app.route('/brightness', methods=['POST'])
-def handle_brightness():
-    config.set('DEFAULT', 'brightness', request.form['brightness'])
-    width = int(config['DEFAULT']['rows'])
-    height = int(config['DEFAULT']['columns'])
+# handling light status
+@app.route("/lowlight", methods=["GET", "POST"])
+def handle_lowlight():
     power = config['DEFAULT']['power']
-    with open(filename, 'wb') as configfile:
-        config.write(configfile)
-    job = manager.RestartUnit('spotipi.service', 'fail')
-    return render_template('index.html', brightness = request.form['brightness'], width = width, height = height, power = power)
+    lowlight = request.form['lowlight']
+    config.set('DEFAULT', 'lowlight', request.form['lowlight'])
+    if lowlight == 'on':
+      sense.low_light = True
+    else:
+      sense.low_light = False
+    return render_template('index.html', power = power, lowlight = lowlight)
 
-# handling form data
-@app.route('/size', methods=['POST'])
-def handle_size():
-    config.set('DEFAULT', 'rows', request.form['width'])
-    config.set('DEFAULT', 'columns', request.form['height'])
-    brightness = int(config['DEFAULT']['brightness'])
-    power = config['DEFAULT']['power']
-    with open(filename, 'wb') as configfile:
-        config.write(configfile)
-    job = manager.RestartUnit('spotipi.service', 'fail')
-    return render_template('index.html', brightness = brightness, width = int(request.form['width']), height = int(request.form['height']), power = power)
 
 app.run(host='0.0.0.0', port=80) 
+

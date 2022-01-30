@@ -6,9 +6,9 @@ from getSongInfo import getSongInfo
 import requests
 from io import BytesIO
 from PIL import Image
-from rgbmatrix import RGBMatrix, RGBMatrixOptions
 import sys,os
 import configparser
+from sense_hat import SenseHat
 
 if len(sys.argv) > 2:
     username = sys.argv[1]
@@ -26,37 +26,63 @@ if len(sys.argv) > 2:
     handler = RotatingFileHandler('spotipy.log', maxBytes=2000,  backupCount=3)
     logger.addHandler(handler)
 
-    # Configuration for the matrix
+     # Configuration for the matrix
     config = configparser.ConfigParser()
     config.read(filename)
-
-    options = RGBMatrixOptions()
-    options.rows = int(config['DEFAULT']['rows'])
-    options.cols = int(config['DEFAULT']['columns'])
-    options.chain_length = int(config['DEFAULT']['chain_length'])
-    options.parallel = int(config['DEFAULT']['parallel'])
-    options.hardware_mapping = config['DEFAULT']['hardware_mapping']
-    options.gpio_slowdown = int(config['DEFAULT']['gpio_slowdown'])
-    options.brightness = int(config['DEFAULT']['brightness'])
-    
     default_image = os.path.join(dir, config['DEFAULT']['default_image'])
     print(default_image)
-    matrix = RGBMatrix(options = options)
     
     try:
       while True:
         try:
           imageURL = getSongInfo(username, token_path)[1]
           response = requests.get(imageURL)
-          image = Image.open(BytesIO(response.content))
-          image.thumbnail((matrix.width, matrix.height), Image.ANTIALIAS)
-          matrix.SetImage(image.convert('RGB'))
-          time.sleep(1)
+          img = Image.open(BytesIO(response.content))
+          img.thumbnail([8, 8], Image.ANTIALIAS)
+
+          # Generate rgb values for image pixels
+          rgb_img = img.convert('RGB')
+          image_pixels = list(rgb_img.getdata())
+
+          # Get the 64 pixels you need
+          pixel_width = 1
+          image_width = pixel_width*8
+          sense_pixels = []
+          start_pixel = 0
+          while start_pixel < (image_width*8):
+              sense_pixels.extend(image_pixels[start_pixel:(
+          start_pixel+image_width):pixel_width])
+              start_pixel += (image_width*pixel_width)
+
+          # Display the image
+          sense = SenseHat()
+          sense.set_rotation(r=180)
+          sense.set_pixels(sense_pixels)
+          time.sleep (1)
+
         except:
-          image = Image.open(default_image)
-          image.thumbnail((matrix.width, matrix.height), Image.ANTIALIAS)
-          matrix.SetImage(image.convert('RGB'))
-          time.sleep(1)
+          img = Image.open(default_image)
+          img.thumbnail([8, 8], Image.ANTIALIAS)
+
+          # Generate rgb values for image pixels
+          rgb_img = img.convert('RGB')
+          image_pixels = list(rgb_img.getdata())
+
+          # Get the 64 pixels you need
+          pixel_width = 1
+          image_width = pixel_width*8
+          sense_pixels = []
+          start_pixel = 0
+          while start_pixel < (image_width*8):
+              sense_pixels.extend(image_pixels[start_pixel:(
+          start_pixel+image_width):pixel_width])
+              start_pixel += (image_width*pixel_width)
+
+          # Display the image
+          sense = SenseHat()
+          sense.set_rotation(r=180)
+          sense.set_pixels(sense_pixels)
+          time.sleep (1)
     except KeyboardInterrupt:
       sys.exit(0)
 
